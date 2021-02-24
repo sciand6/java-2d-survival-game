@@ -18,6 +18,10 @@ public class Game extends Canvas implements Runnable {
 	
 	private Thread thread;
 	private boolean running = false;
+	public static boolean paused = false;
+	public int diff = 0;
+	// 0 = normal
+	// 1 = hard
 	
 	private Handler handler;
 	private Spawn spawner;
@@ -27,6 +31,7 @@ public class Game extends Canvas implements Runnable {
 	
 	public enum STATE {
 		Menu,
+		Select,
 		Help,
 		Game,
 		End,
@@ -40,8 +45,8 @@ public class Game extends Canvas implements Runnable {
 		hud = new HUD();
 		r = new Random();
 		handler = new Handler();
-		spawner = new Spawn(handler, hud);
-		this.addKeyListener(new KeyInput(handler));
+		spawner = new Spawn(handler, hud, this);
+		this.addKeyListener(new KeyInput(handler, this));
 		menu = new Menu(this, handler, hud);
 		this.addMouseListener(menu);
 		// Add game objects
@@ -100,27 +105,29 @@ public class Game extends Canvas implements Runnable {
 	}
 	
 	private void tick() {
-		handler.tick();
-		
 		if (gameState == STATE.Game) {
-			hud.tick();
-			spawner.tick();
-			
-			// Losing condition
-			if (hud.HEALTH <= 0) {
-				hud.HEALTH = 100;
-				gameState = STATE.End;
-				handler.clearEnemies();
+			if (!paused) {
+				hud.tick();
+				spawner.tick();
+				handler.tick();
+				
+				// Losing condition
+				if (hud.HEALTH <= 0) {
+					hud.HEALTH = 100;
+					gameState = STATE.End;
+					handler.clearEnemies();
+				}
+				
+				// Winning condition
+				if (hud.getLevel() == 30 && hud.HEALTH > 0) {
+					hud.HEALTH = 100;
+					gameState = STATE.Win;
+					handler.clearEnemies();
+				}
 			}
-			
-			// Winning condition
-			if (hud.getLevel() == 30 && hud.HEALTH > 0) {
-				hud.HEALTH = 100;
-				gameState = STATE.Win;
-				handler.clearEnemies();
-			}
-		} else if (gameState == STATE.Menu || gameState == STATE.End || gameState == STATE.Win) {
+		} else if (gameState == STATE.Select || gameState == STATE.Menu || gameState == STATE.End || gameState == STATE.Win) {
 			menu.tick();
+			handler.tick();
 		} 
 	}
 	
@@ -136,9 +143,13 @@ public class Game extends Canvas implements Runnable {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, WIDTH, HEIGHT);
 		handler.render(g);
+		if (paused) {
+			g.setColor(Color.red);
+			g.drawString("PAUSED", 100, 100);
+		}
 		if (gameState == STATE.Game) {
 			hud.render(g);
-		} else if (gameState == STATE.Menu || gameState == STATE.Help || gameState == STATE.End || gameState == STATE.Win) {
+		} else if (gameState == STATE.Select || gameState == STATE.Menu || gameState == STATE.Help || gameState == STATE.End || gameState == STATE.Win) {
 			menu.render(g);
 		}
 		g.dispose();

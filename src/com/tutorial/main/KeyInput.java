@@ -3,17 +3,22 @@ package com.tutorial.main;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+import com.tutorial.main.Game.STATE;
+
 public class KeyInput extends KeyAdapter {
 	
 	private Handler handler;
 	private boolean[] keyDown = new boolean[4];
 	
-	public KeyInput(Handler handler) {
+	Game game;
+	
+	public KeyInput(Handler handler, Game game) {
 		this.handler = handler;
 		keyDown[0] = false;
 		keyDown[1] = false;
 		keyDown[2] = false;
 		keyDown[3] = false;
+		this.game = game;
 	}
 	
 	// Implemented abstract methods
@@ -40,6 +45,16 @@ public class KeyInput extends KeyAdapter {
 					curObj.setVelX(-5);
 					keyDown[3] = true;
 				}
+			}
+		}
+		if (key == KeyEvent.VK_P) {
+			if (game.gameState == STATE.Game) {
+				
+			}
+			if (Game.paused) {
+				Game.paused = false;
+			} else {
+				Game.paused = true;
 			}
 		}
 		if (key == KeyEvent.VK_ESCAPE) {
